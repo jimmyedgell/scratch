@@ -1,0 +1,32 @@
+project_root/
+│
+├── conf/                      # Configuration files
+│   ├── conf.json             # Base configuration
+│   └── conf_local.json       # Local configuration (git-ignored)
+│
+├── data/                     # Data directory for all projects
+│   ├── bronze/              # Raw data
+│   ├── silver/              # Processed data
+│   └── gold/                # Final processed data
+│
+├── src/                      # Source code
+│   ├── spotify/             # Spotify playlist manager
+│   │   ├── __init__.py
+│   │   ├── playlist_downloader.py
+│   │   ├── playlist_csv_converter.py
+│   │   └── pyproject.toml   # Spotify project dependencies
+│
+├── tests/                    # Test files
+│   ├── test_spotify/        # Spotify project tests
+│   │   ├── __init__.py
+│   │   ├── test_playlist_converter.py
+│   │   └── test_playlist_downloader.py
+│
+├── docs/                     # Project-specific documentation
+│   └── spotify/             # Spotify project documentation
+│       └── README.md        # Detailed Spotify project docs
+│
+├── notebooks/                # Jupyter notebooks for all projects
+├── pyproject.toml          # Base project configuration and dependencies
+├── README.md               # Repository documentation
+└── .gitignore             # Git ignore file

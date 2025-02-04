@@ -1,0 +1,30 @@
+# Python
+*__pycache__
+.pytest_cache
+
+# Jupyter Notebook
+*.ipynb_checkpoints
+
+# Environment
+.venv
+
+# IDE
+.vscode/
+
+# OS
+.DS_Store
+
+# Local
+.cache
+data
+conf/conf_local.json
+
+# Model artifacts
+*.pkl
+*.h5
+*.joblib
+
+# To be added
+notebooks/
+src/utils
+tests/utils
