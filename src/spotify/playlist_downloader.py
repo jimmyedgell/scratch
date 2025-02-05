@@ -4,31 +4,31 @@ Spotify Playlist Downloader
 This module handles downloading playlists and liked songs from Spotify.
 Each playlist is saved as a separate JSON file in the data/bronze directory.
 
-Created: 2024-03-19
+Created: 2025-02-04
 Author: James Edgell
-Version: 0.0.0
+Version: 0.0.1
 License: MIT
 
 Version History
 --------------
-0.0.0 (2024-03-19)
+0.0.0 (2025-02-04)
     - Initial implementation
     - Download playlists and liked songs
     - Save to JSON with proper UTF-8 encoding
     - Pagination support for large playlists
     - Logging and error handling
-
-Dependencies
------------
-    - spotipy
 """
 
-import spotipy
-from spotipy.oauth2 import SpotifyOAuth
+# Standard imports
 import json
+import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Iterator
-import logging
+
+# Third party imports
+import spotipy
+from spotipy.oauth2 import SpotifyOAuth
+
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

@@ -58,12 +58,13 @@ pytest ../../tests/{project}/ -v
 ### Code Style
 This repository follows PEP 8 guidelines. Each project includes development dependencies for code formatting and linting (black, ruff, mypy).
 
-
 ## Version History
 
-### 0.0.0 (2024-03-19)
-- Initial implementation of Spotify Playlist Manager
+### 0.0.1 (2025-02-05)
+- Fix test_playlist_converter.py in Spotify Playlist Manager.
 
+### 0.0.0 (2025-02-04)
+- Initial implementation of Spotify Playlist Manager.
 
 ## License
 

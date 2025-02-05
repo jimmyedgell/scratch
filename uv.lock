@@ -179,8 +179,8 @@ wheels = [
 ]
 
 [[package]]
-name = "data-science-projects"
-version = "0.1.0"
+name = "scratch"
+version = "0.0.1"
 source = { editable = "." }
 dependencies = [
     { name = "ipykernel" },

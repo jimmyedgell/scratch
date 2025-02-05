@@ -1,16 +1,15 @@
 [project]
 name = "spotify-playlist-manager"
-version = "0.0.0"
+version = "0.0.1"
 description = "A Python package for managing Spotify playlists"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [
     { name = "James Edgell", email = "" }
 ]
 
 dependencies = [
     "spotipy>=2.23.0",
-    "pandas>=2.0.0",
-    "pydantic>=2.0.0",
+    "pandas>=2.2.3",
 ]
 
 [project.optional-dependencies]
@@ -22,12 +21,24 @@ dev = [
     "mypy>=1.0.0",
 ]
 
+[project.scripts]
+spotify-download = "spotify.playlist_downloader:main"
+spotify-convert = "spotify.playlist_csv_converter:main"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["spotify*"]
+
 [tool.ruff]
 line-length = 100
 
 [tool.black]
 line-length = 100
-target-version = ['py39']
+target-version = ['py310']
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

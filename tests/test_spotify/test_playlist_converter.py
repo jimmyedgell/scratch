@@ -1,94 +1,145 @@
-"""
-Unit tests for spotify_playlist_csv_converter.py
-"""
+"""Tests for the playlist CSV converter module"""
 
-import pytest
-from pathlib import Path
+# Standard imports
 import json
-import pandas as pd
-from src.spotify import format_duration, combine_playlists_to_csv
+from pathlib import Path
+from unittest.mock import patch
 
-def test_format_duration():
-    """Test the duration formatting function"""
-    # Test various durations
-    assert format_duration(1000) == "0:01"  # 1 second
-    assert format_duration(60000) == "1:00"  # 1 minute
-    assert format_duration(61000) == "1:01"  # 1 minute 1 second
-    assert format_duration(3661000) == "61:01"  # 61 minutes 1 second
-    assert format_duration(0) == "0:00"  # 0 seconds
+# Third party imports
+import pandas as pd
+import pytest
+
+# Local imports
+from src.spotify.playlist_csv_converter import (
+    format_duration,
+    combine_playlists_to_csv
+)
+
 
 @pytest.fixture
-def sample_playlist_data(tmp_path):
-    """Create sample playlist JSON files for testing"""
-    bronze_dir = tmp_path / "bronze"
-    bronze_dir.mkdir()
-    
-    # Create two sample playlist files
-    playlist1 = {
-        "playlist_name": "Test Playlist 1",
-        "playlist_id": "123",
-        "playlist_url": "http://example.com/1",
-        "tracks": [
+def mock_playlist_data():
+    """Mock playlist JSON data"""
+    return {
+        'playlist_name': 'Test Playlist',
+        'tracks': [
             {
-                "name": "Song 1",
-                "artist": "Artist 1",
-                "album": "Album 1",
-                "duration_ms": 180000,
-                "spotify_url": "http://example.com/song1",
-                "added_at": "2024-03-19T12:00:00Z"
+                'name': 'Test Track 1',
+                'artist': 'Test Artist 1',
+                'album': 'Test Album 1',
+                'duration_ms': 180000,
+                'spotify_url': 'https://spotify.com/track/1',
+                'added_at': '2024-03-19T12:00:00Z'
+            },
+            {
+                'name': 'Test Track 2',
+                'artist': 'Test Artist 2',
+                'album': 'Test Album 2',
+                'duration_ms': 240000,
+                'spotify_url': 'https://spotify.com/track/2',
+                'added_at': '2024-03-19T12:01:00Z'
             }
         ]
     }
-    
-    playlist2 = {
-        "playlist_name": "Test Playlist 2",
-        "playlist_id": "456",
-        "playlist_url": "http://example.com/2",
-        "tracks": [
-            {
-                "name": "Song 2",
-                "artist": "Artist 2",
-                "album": "Album 2",
-                "duration_ms": 240000,
-                "spotify_url": "http://example.com/song2",
-                "added_at": "2024-03-19T12:00:00Z"
-            }
-        ]
-    }
-    
-    # Write the sample files
-    with open(bronze_dir / "playlist1.json", 'w') as f:
-        json.dump(playlist1, f)
-    with open(bronze_dir / "playlist2.json", 'w') as f:
-        json.dump(playlist2, f)
-    
-    return tmp_path
 
-def test_combine_playlists_to_csv(sample_playlist_data):
-    """Test the playlist combination function"""
-    # Set up paths
-    input_dir = sample_playlist_data / "bronze"
-    output_dir = sample_playlist_data / "silver"
-    
-    # Run the combination function
-    combine_playlists_to_csv(str(input_dir), str(output_dir))
-    
-    # Check if output file exists
-    output_file = output_dir / "combined_playlists.csv"
-    assert output_file.exists()
-    
-    # Read and verify the output
-    df = pd.read_csv(output_file)
-    
-    # Check basic properties
-    assert len(df) == 2  # Two tracks total
-    assert list(df.columns) == [
-        'playlist_name', 'name', 'artist', 'album', 'duration',
-        'added_at', 'spotify_url', 'playlist_url'
+
+def test_format_duration():
+    """Test duration formatting from milliseconds to MM:SS"""
+    test_cases = [
+        (180000, '3:00'),    # 3 minutes
+        (195000, '3:15'),    # 3 minutes 15 seconds
+        (45000, '0:45'),     # 45 seconds
+        (3600000, '60:00'),  # 1 hour
+        (0, '0:00'),         # 0
     ]
     
-    # Check content
-    assert "Test Playlist 1" in df['playlist_name'].values
-    assert "Test Playlist 2" in df['playlist_name'].values
-    assert "3:00" in df['duration'].values  # 180000ms = 3:00
-    assert "4:00" in df['duration'].values  # 240000ms = 4:00 
+    for ms, expected in test_cases:
+        assert format_duration(ms) == expected
+
+def test_combine_playlists_to_csv(tmp_path, mock_playlist_data):
+    """Test combining playlist JSON files into CSV"""
+    # Create mock bronze and silver directories
+    bronze_dir = tmp_path / 'data' / 'bronze'
+    bronze_dir.mkdir(parents=True)
+    
+    # Create a test playlist file
+    playlist_file = bronze_dir / 'test_playlist.json'
+    with open(playlist_file, 'w', encoding='utf-8') as f:
+        json.dump(mock_playlist_data, f)
+    
+    # Mock the Path to use our temporary directory
+    def mock_path_constructor(path_str):
+        if path_str == 'data/bronze':
+            return bronze_dir
+        if path_str == 'data/silver':
+            return tmp_path / 'data' / 'silver'
+        return Path(path_str)
+    
+    with patch('src.spotify.playlist_csv_converter.Path', side_effect=mock_path_constructor):
+        output_file = combine_playlists_to_csv()
+        
+        # Verify the output file exists
+        assert output_file.exists()
+        
+        # Read and verify the CSV content
+        df = pd.read_csv(output_file)
+        assert len(df) == 2  # Two tracks
+        assert 'playlist' in df.columns
+        assert all(df['playlist'] == 'Test Playlist')
+        assert all(df['duration'].str.match(r'^\d+:\d{2}$'))  # Format MM:SS
+
+def test_combine_playlists_no_bronze_dir(tmp_path):
+    """Test error handling when bronze directory doesn't exist"""
+    # Create a mock Path class that makes bronze_dir.exists() return False
+    class MockPath:
+        def __init__(self, path):
+            self.path = path
+        
+        def exists(self):
+            return False
+        
+        def mkdir(self, parents=False, exist_ok=False):
+            pass
+        
+        def glob(self, pattern):
+            return []
+    
+    with patch('src.spotify.playlist_csv_converter.Path', side_effect=MockPath):
+        with pytest.raises(FileNotFoundError, match="No bronze directory found"):
+            combine_playlists_to_csv()
+
+def test_combine_playlists_empty_bronze_dir(tmp_path):
+    """Test error handling when bronze directory is empty"""
+    # Create empty bronze directory
+    bronze_dir = tmp_path / 'data' / 'bronze'
+    bronze_dir.mkdir(parents=True)
+    
+    def mock_path_constructor(path_str):
+        if path_str == 'data/bronze':
+            return bronze_dir
+        if path_str == 'data/silver':
+            return tmp_path / 'data' / 'silver'
+        return Path(path_str)
+    
+    with patch('src.spotify.playlist_csv_converter.Path', side_effect=mock_path_constructor):
+        with pytest.raises(FileNotFoundError, match="No playlist files found"):
+            combine_playlists_to_csv()
+
+def test_combine_playlists_invalid_json(tmp_path):
+    """Test handling of invalid JSON files"""
+    # Create bronze directory with invalid JSON
+    bronze_dir = tmp_path / 'data' / 'bronze'
+    bronze_dir.mkdir(parents=True)
+    
+    invalid_file = bronze_dir / 'invalid.json'
+    invalid_file.write_text('{invalid json}')
+    
+    def mock_path_constructor(path_str):
+        if path_str == 'data/bronze':
+            return bronze_dir
+        if path_str == 'data/silver':
+            return tmp_path / 'data' / 'silver'
+        return Path(path_str)
+    
+    with patch('src.spotify.playlist_csv_converter.Path', side_effect=mock_path_constructor):
+        with pytest.raises(ValueError, match="No tracks were found"):
+            combine_playlists_to_csv() 

@@ -1,16 +1,21 @@
 """Tests for the playlist downloader module"""
 
-import pytest
-from pathlib import Path
+# Standard imports
 import json
-from unittest.mock import Mock, patch
+from pathlib import Path
+from unittest.mock import patch
 
+# Third party imports
+import pytest
+
+# Local imports
 from src.spotify.playlist_downloader import (
     sanitize_filename,
     extract_track_info,
     save_tracks_to_json,
     process_track_batch
 )
+
 
 @pytest.fixture
 def mock_track():
@@ -30,6 +35,7 @@ def mock_user_info():
         'id': 'test_user',
         'display_name': 'Test User'
     }
+
 
 def test_sanitize_filename():
     """Test filename sanitization"""

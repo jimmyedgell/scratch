@@ -53,7 +53,10 @@ The project uses a medallion architecture for data organization:
 
 ## Version History
 
-### 0.0.0 (2024-03-19)
+### 0.0.1 (2025-02-05)
+- Fix test_playlist_converter.py so that it outputs CSV correctly.
+
+### 0.0.0 (2025-02-04)
 - Initial implementation
 - Core features:
   - Download playlists and liked songs
